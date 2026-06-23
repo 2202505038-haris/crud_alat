@@ -4,6 +4,9 @@ include_once("config.php");
 
 // Mengambil semua data dari database (diurutkan dari yang terbaru)
 $result = mysqli_query($mysqli, "SELECT * FROM alat ORDER BY id DESC");
+
+// Menghitung jumlah total alat untuk widget statistik
+$total_alat = mysqli_num_rows($result);
 ?>
 
 <!DOCTYPE html>
@@ -22,6 +25,16 @@ $result = mysqli_query($mysqli, "SELECT * FROM alat ORDER BY id DESC");
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 40px;
             color: #333;
+        }
+
+        /* Pembungkus Header Utama (Profil + Widget Kanan) */
+        .header-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 25px;
         }
 
         h2 {
@@ -127,25 +140,23 @@ $result = mysqli_query($mysqli, "SELECT * FROM alat ORDER BY id DESC");
             background-color: rgba(244, 67, 54, 0.2);
         }
 
-        /* Kontainer Profil */
+        /* Kontainer Profil (Sisi Kiri) */
         .profile-container {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
             background-color: rgba(255, 255, 255, 0.8);
             padding: 15px;
             border-radius: 8px;
-            display: inline-flex;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
         .profile-img {
-            width: 80px; /* Ukuran lebar foto */
-            height: 80px; /* Ukuran tinggi foto */
-            border-radius: 50%; /* Membuat foto jadi lingkaran perfect */
-            object-fit: cover; /* Mencegah foto gepeng */
+            width: 80px; 
+            height: 80px; 
+            border-radius: 50%; 
+            object-fit: cover; 
             margin-right: 20px;
-            border: 3px solid #008080; /* Bingkai warna hijau toska sesuai tema */
+            border: 3px solid #008080; 
         }
 
         .profile-text h2 {
@@ -155,18 +166,80 @@ $result = mysqli_query($mysqli, "SELECT * FROM alat ORDER BY id DESC");
         .profile-text p {
             margin: 5px 0 0 0;
         }
+
+        /* Panel Sisi Kanan (Jam + Statistik) */
+        .right-widgets {
+            display: flex;
+            gap: 15px;
+        }
+
+        .widget-box {
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            text-align: right;
+            min-width: 150px;
+            border-right: 4px solid #008080;
+        }
+
+        .widget-box.time-box {
+            border-right: 4px solid #007bff;
+        }
+
+        .widget-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #777;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .widget-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #222;
+        }
+
+        .widget-sub {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        #live-clock {
+            font-family: 'Courier New', Courier, monospace;
+        }
     </style>
 </head>
 <body>
 
-    <div class="profile-container">
-        <img src="foto.jpeg" alt="Foto Haris Gunawan" class="profile-img">
-        <div class="profile-text">
-            <h2>Data Alat Elektromedis</h2>
-            <p>Oleh: Haris Gunawan (2202505038)</p>
+    <div class="header-wrapper">
+        
+        <div class="profile-container">
+            <img src="foto.jpeg" alt="Foto Haris Gunawan" class="profile-img">
+            <div class="profile-text">
+                <h2>Data Alat Elektromedis</h2>
+                <p>Oleh: Haris Gunawan (2202505038)</p>
+            </div>
         </div>
+
+        <div class="right-widgets">
+            <div class="widget-box">
+                <div class="widget-label">Total Inventaris</div>
+                <div class="widget-value"><?php echo $total_alat; ?></div>
+                <div class="widget-sub">Unit Alat Medis</div>
+            </div>
+
+            <div class="widget-box time-box">
+                <div class="widget-label">Waktu Sistem SIM RS</div>
+                <div id="live-clock" class="widget-value">00:00:00</div>
+                <div id="live-date" class="widget-sub">Memuat...</div>
+            </div>
+        </div>
+
     </div>
-    <br><br>
     
     <a href="add.php" class="btn btn-tambah">Tambah Alat Baru</a>
     <a href="print.php" target="_blank" class="btn btn-cetak">Cetak PDF</a>
@@ -199,6 +272,26 @@ $result = mysqli_query($mysqli, "SELECT * FROM alat ORDER BY id DESC");
             ?>
         </tbody>
     </table>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            
+            // Format Jam
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('live-clock').textContent = `${hours}:${minutes}:${seconds}`;
+            
+            // Format Tanggal Bahasa Indonesia
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('live-date').textContent = now.toLocaleDateString('id-ID', options);
+        }
+
+        // Jalankan waktu secara dinamis per 1 detik
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
 
 </body>
 </html>
