@@ -5,11 +5,12 @@ include_once("config.php");
 // 1. Logika Ambil Parameter Pencarian & Filter dari URL (Metode GET)
 $search = isset($_GET['search']) ? mysqli_real_escape_string($mysqli, $_GET['search']) : '';
 $filter_lokasi = isset($_GET['filter_lokasi']) ? mysqli_real_escape_string($mysqli, $_GET['filter_lokasi']) : '';
+$filter_kondisi = isset($_GET['filter_kondisi']) ? mysqli_real_escape_string($mysqli, $_GET['filter_kondisi']) : '';
 
-// 2. Menyusun Query Dasar
+// 2. Menyusun Query Dasar Dinamis (WHERE 1=1)
 $query = "SELECT * FROM alat WHERE 1=1";
 
-// Jika user mengisi kolom kata kunci pencarian
+// Jika user mengisi kolom kata kunci pencarian (Nama Alat atau Merek)
 if ($search != '') {
     $query .= " AND (nama_alat LIKE '%$search%' OR merek LIKE '%$search%')";
 }
@@ -19,10 +20,15 @@ if ($filter_lokasi != '') {
     $query .= " AND lokasi = '$filter_lokasi'";
 }
 
-// Urutkan berdasarkan data terbaru
+// Jika user memilih opsi filter kondisi tertentu
+if ($filter_kondisi != '') {
+    $query .= " AND kondisi = '$filter_kondisi'";
+}
+
+// Urutkan berdasarkan data terbaru yang diinput
 $query .= " ORDER BY id DESC";
 
-// Eksekusi query gabungan
+// Eksekusi query gabungan ke database MySQL
 $result = mysqli_query($mysqli, $query);
 
 // Menghitung jumlah total alat berdasarkan hasil filter/pencarian untuk widget statistik
@@ -47,6 +53,44 @@ $total_alat = mysqli_num_rows($result);
             color: #333;
         }
 
+        /* --- TAMPILAN KOTAK INFORMASI INSTITUSI KULIAH --- */
+        .header-kampus {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #008080;
+        }
+        .header-kampus-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .header-kampus-table td {
+            border: none !important;
+            padding: 4px !important;
+            background: transparent !important;
+        }
+        .logo-kampus {
+            max-height: 60px;
+            width: auto;
+            object-fit: contain;
+        }
+        .text-kampus h2 {
+            margin: 0;
+            font-size: 13px;
+            color: #666;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .text-kampus h1 {
+            margin: 2px 0;
+            font-size: 16px;
+            color: #006666;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
         /* Pembungkus Header Utama (Profil + Widget Kanan) */
         .header-wrapper {
             display: flex;
@@ -55,17 +99,6 @@ $total_alat = mysqli_num_rows($result);
             flex-wrap: wrap;
             gap: 20px;
             margin-bottom: 25px;
-        }
-
-        h2 {
-            margin-bottom: 5px;
-            color: #006666;
-        }
-
-        p {
-            margin-top: 0;
-            color: #555;
-            font-weight: 500;
         }
 
         /* Desain Tombol Menu */
@@ -160,7 +193,7 @@ $total_alat = mysqli_num_rows($result);
         table {
             width: 100%;
             border-collapse: collapse;
-            background-color: rgba(255, 255, 255, 0.9); /* Membuat tabel semi transparan */
+            background-color: rgba(255, 255, 255, 0.9);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             overflow: hidden;
@@ -181,6 +214,7 @@ $total_alat = mysqli_num_rows($result);
             padding: 12px 15px;
             border-bottom: 1px solid #e0e0e0;
             font-size: 14px;
+            vertical-align: middle;
         }
 
         tr:last-child td {
@@ -188,21 +222,66 @@ $total_alat = mysqli_num_rows($result);
         }
 
         tr:hover {
-            background-color: rgba(0, 128, 128, 0.05); /* Efek sorot saat mouse lewat */
+            background-color: rgba(0, 128, 128, 0.05);
         }
 
-        /* Tombol Aksi (Edit & Delete) */
+        /* --- BADGE STATUS WARNA LOKASI & KONDISI --- */
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+        .status-baik {
+            background-color: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+        }
+        .status-rusak {
+            background-color: rgba(220, 53, 69, 0.15);
+            color: #dc3545;
+        }
+
+        .badge-lokasi {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .lokasi-igd { background-color: #ffeef0; color: #f44336; }
+        .lokasi-nicu { background-color: #e3f2fd; color: #0d47a1; }
+        .lokasi-gigi { background-color: #e8f5e9; color: #1b5e20; }
+        .lokasi-ok { background-color: #f3e5f5; color: #4a148c; }
+        .lokasi-anak { background-color: #fff3e0; color: #e65100; }
+        .lokasi-cssd { background-color: #ede7f6; color: #5e35b1; }
+        .lokasi-default { background-color: #e0f7fa; color: #006064; }
+
+        /* Tombol Aksi Lengkap (Detail, Edit & Delete) */
         .action-link {
             text-decoration: none;
             font-weight: bold;
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 4px;
-            font-size: 13px;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .detail {
+            color: #00bcd4;
+            background-color: rgba(0, 188, 212, 0.1);
+            margin-right: 2px;
+        }
+
+        .detail:hover {
+            background-color: rgba(0, 188, 212, 0.2);
         }
 
         .edit {
             color: #ff9800;
             background-color: rgba(255, 152, 0, 0.1);
+            margin-left: 2px;
         }
 
         .edit:hover {
@@ -212,7 +291,7 @@ $total_alat = mysqli_num_rows($result);
         .delete {
             color: #f44336;
             background-color: rgba(244, 67, 54, 0.1);
-            margin-left: 5px;
+            margin-left: 4px;
         }
 
         .delete:hover {
@@ -294,6 +373,21 @@ $total_alat = mysqli_num_rows($result);
 </head>
 <body>
 
+    <div class="header-kampus">
+        <table class="header-kampus-table">
+            <tr>
+                <td style="width: 75px; text-align: center; vertical-align: middle;">
+                    <img src="logo_kampus.png" class="logo-kampus" alt="Logo" onerror="this.style.display='none'">
+                </td>
+                <td class="text-kampus" style="vertical-align: middle; padding-left: 8px;">
+                    <h2>UJIAN AKHIR SEMESTER (UAS) — PEMROGRAMAN WEB</h2>
+                    <h1>PROGRAM STUDI DIV TEKNOLOGI REKAYASA ELEKTROMEDIS</h1>
+                    <h2 style="color: #555; font-weight: 500;">UMPKU SURAKARTA</h2>
+                </td>
+            </tr>
+        </table>
+    </div>
+
     <div class="header-wrapper">
         
         <div class="profile-container">
@@ -335,11 +429,18 @@ $total_alat = mysqli_num_rows($result);
             <option value="NICU" <?php if($filter_lokasi == 'NICU') echo 'selected'; ?>>NICU</option>
             <option value="RI.Anak" <?php if($filter_lokasi == 'RI.Anak') echo 'selected'; ?>>RI.Anak</option>
             <option value="IGD" <?php if($filter_lokasi == 'IGD') echo 'selected'; ?>>IGD</option>
+            <option value="CSSD" <?php if($filter_lokasi == 'CSSD') echo 'selected'; ?>>CSSD</option>
             <option value="Kebidanan" <?php if($filter_lokasi == 'Kebidanan') echo 'selected'; ?>>Kebidanan</option>
         </select>
 
+        <select name="filter_kondisi" class="select-filter">
+            <option value="">-- Semua Kondisi --</option>
+            <option value="Baik" <?php if($filter_kondisi == 'Baik') echo 'selected'; ?>>Baik</option>
+            <option value="Rusak" <?php if($filter_kondisi == 'Rusak') echo 'selected'; ?>>Rusak</option>
+        </select>
+
         <button type="submit" class="btn-cari">Cari</button>
-        <?php if($search != '' || $filter_lokasi != ''): ?>
+        <?php if($search != '' || $filter_lokasi != '' || $filter_kondisi != ''): ?>
             <a href="index.php" class="btn-reset">Reset</a>
         <?php endif; ?>
     </form>
@@ -351,26 +452,61 @@ $total_alat = mysqli_num_rows($result);
                 <th>Tahun</th>
                 <th>Merek</th>
                 <th>Lokasi</th>
-                <th>Aksi</th>
+                <th>Kondisi</th>
+                <th style="text-align: center; width: 220px;">Aksi</th>
             </tr>
         </thead>
         <tbody>
             <?php  
             if (mysqli_num_rows($result) > 0) {
                 while($user_data = mysqli_fetch_array($result)) {         
+                    
+                    // 1. Logika Klasifikasi Kelas CSS Warna Badge Ruangan / Lokasi (Case Insensitive)
+                    $lokasi_raw = strtolower(trim($user_data['lokasi']));
+                    $class_lokasi = 'lokasi-default';
+                    
+                    if (strpos($lokasi_raw, 'igd') !== false) {
+                        $class_lokasi = 'lokasi-igd';
+                    } elseif (strpos($lokasi_raw, 'nicu') !== false) {
+                        $class_lokasi = 'lokasi-nicu';
+                    } elseif (strpos($lokasi_raw, 'gigi') !== false) {
+                        $class_lokasi = 'lokasi-gigi';
+                    } elseif (strpos($lokasi_raw, 'ok') !== false) {
+                        $class_lokasi = 'lokasi-ok';
+                    } elseif (strpos($lokasi_raw, 'anak') !== false) {
+                        $class_lokasi = 'lokasi-anak';
+                    } elseif (strpos($lokasi_raw, 'cssd') !== false) {
+                        $class_lokasi = 'lokasi-cssd';
+                    }
+
+                    // Menyeragamkan penulisan string Lokasi di layar menjadi huruf besar semua (Data Cleaning)
+                    $lokasi_clean = strtoupper($user_data['lokasi']);
+
+                    // 2. Logika Klasifikasi Kelas CSS Warna Badge Kondisi Alat
+                    $kondisi_alat = isset($user_data['kondisi']) ? $user_data['kondisi'] : 'Baik';
+                    $class_kondisi = ($kondisi_alat == 'Rusak') ? 'status-rusak' : 'status-baik';
+
                     echo "<tr>";
-                    echo "<td>".$user_data['nama_alat']."</td>";
+                    echo "<td style='font-weight: 500;'>".$user_data['nama_alat']."</td>";
                     echo "<td>".$user_data['tahun']."</td>";
                     echo "<td>".$user_data['merek']."</td>";    
-                    echo "<td>".$user_data['lokasi']."</td>";    
-                    echo "<td>
-                            <a href='edit.php?id=$user_data[id]' class='action-link edit'>Edit</a> | 
+                    
+                    // Render Badge Lokasi
+                    echo "<td><span class='badge-lokasi ".$class_lokasi."'>".$lokasi_clean."</span></td>";    
+                    
+                    // Render Badge Kondisi Alat
+                    echo "<td><span class='badge-status ".$class_kondisi."'>".$kondisi_alat."</span></td>";    
+                    
+                    // Render Tombol Menu Aksi Lengkap (Detail, Edit, Delete)
+                    echo "<td style='text-align: center;'>
+                            <a href='detail.php?id=$user_data[id]' class='action-link detail'>Detail</a>
+                            <a href='edit.php?id=$user_data[id]' class='action-link edit'>Edit</a>
                             <a href='delete.php?id=$user_data[id]' class='action-link delete' onclick='return confirm(\"Apakah Anda yakin ingin menghapus data ini?\")'>Delete</a>
                           </td>";
                     echo "</tr>";        
                 }
             } else {
-                echo "<tr><td colspan='5' style='text-align: center; color: #888; font-style: italic; padding: 20px;'>Data tidak ditemukan / tidak sesuai filter.</td></tr>";
+                echo "<tr><td colspan='6' style='text-align: center; color: #888; font-style: italic; padding: 25px;'>Data tidak ditemukan / tidak sesuai filter pencarian.</td></tr>";
             }
             ?>
         </tbody>
