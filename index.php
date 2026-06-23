@@ -2,10 +2,30 @@
 // Menyambungkan ke database menggunakan file konfigurasi
 include_once("config.php");
 
-// Mengambil semua data dari database (diurutkan dari yang terbaru)
-$result = mysqli_query($mysqli, "SELECT * FROM alat ORDER BY id DESC");
+// 1. Logika Ambil Parameter Pencarian & Filter dari URL (Metode GET)
+$search = isset($_GET['search']) ? mysqli_real_escape_string($mysqli, $_GET['search']) : '';
+$filter_lokasi = isset($_GET['filter_lokasi']) ? mysqli_real_escape_string($mysqli, $_GET['filter_lokasi']) : '';
 
-// Menghitung jumlah total alat untuk widget statistik
+// 2. Menyusun Query Dasar
+$query = "SELECT * FROM alat WHERE 1=1";
+
+// Jika user mengisi kolom kata kunci pencarian
+if ($search != '') {
+    $query .= " AND (nama_alat LIKE '%$search%' OR merek LIKE '%$search%')";
+}
+
+// Jika user memilih opsi filter lokasi tertentu
+if ($filter_lokasi != '') {
+    $query .= " AND lokasi = '$filter_lokasi'";
+}
+
+// Urutkan berdasarkan data terbaru
+$query .= " ORDER BY id DESC";
+
+// Eksekusi query gabungan
+$result = mysqli_query($mysqli, $query);
+
+// Menghitung jumlah total alat berdasarkan hasil filter/pencarian untuk widget statistik
 $total_alat = mysqli_num_rows($result);
 ?>
 
@@ -77,6 +97,65 @@ $total_alat = mysqli_num_rows($result);
             background-color: #0056b3;
         }
 
+        /* Desain Baru Form Pencarian dan Filter */
+        .search-filter-form {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .input-search {
+            flex: 1;
+            min-width: 250px;
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .select-filter {
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+            min-width: 160px;
+        }
+
+        .btn-cari {
+            background-color: #008080;
+            color: white;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .btn-cari:hover {
+            background-color: #005a5a;
+        }
+
+        .btn-reset {
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            padding: 9px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .btn-reset:hover {
+            background-color: #5a6268;
+        }
+
         /* Desain Tabel Modern Transparan */
         table {
             width: 100%;
@@ -85,7 +164,7 @@ $total_alat = mysqli_num_rows($result);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             overflow: hidden;
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         th {
@@ -243,7 +322,27 @@ $total_alat = mysqli_num_rows($result);
     
     <a href="add.php" class="btn btn-tambah">Tambah Alat Baru</a>
     <a href="print.php" target="_blank" class="btn btn-cetak">Cetak PDF</a>
-    <br><br>
+
+    <form method="GET" action="index.php" class="search-filter-form">
+        <input type="text" name="search" class="input-search" placeholder="Cari Nama Alat atau Merek..." 
+               value="<?php echo htmlspecialchars($search); ?>">
+
+        <select name="filter_lokasi" class="select-filter">
+            <option value="">-- Semua Lokasi --</option>
+            <option value="Poli Gigi" <?php if($filter_lokasi == 'Poli Gigi') echo 'selected'; ?>>Poli Gigi</option>
+            <option value="Poli" <?php if($filter_lokasi == 'Poli') echo 'selected'; ?>>Poli</option>
+            <option value="Kamar OK1" <?php if($filter_lokasi == 'Kamar OK1') echo 'selected'; ?>>Kamar OK1</option>
+            <option value="NICU" <?php if($filter_lokasi == 'NICU') echo 'selected'; ?>>NICU</option>
+            <option value="RI.Anak" <?php if($filter_lokasi == 'RI.Anak') echo 'selected'; ?>>RI.Anak</option>
+            <option value="IGD" <?php if($filter_lokasi == 'IGD') echo 'selected'; ?>>IGD</option>
+            <option value="Kebidanan" <?php if($filter_lokasi == 'Kebidanan') echo 'selected'; ?>>Kebidanan</option>
+        </select>
+
+        <button type="submit" class="btn-cari">Cari</button>
+        <?php if($search != '' || $filter_lokasi != ''): ?>
+            <a href="index.php" class="btn-reset">Reset</a>
+        <?php endif; ?>
+    </form>
 
     <table>
         <thead>
@@ -257,17 +356,21 @@ $total_alat = mysqli_num_rows($result);
         </thead>
         <tbody>
             <?php  
-            while($user_data = mysqli_fetch_array($result)) {         
-                echo "<tr>";
-                echo "<td>".$user_data['nama_alat']."</td>";
-                echo "<td>".$user_data['tahun']."</td>";
-                echo "<td>".$user_data['merek']."</td>";    
-                echo "<td>".$user_data['lokasi']."</td>";    
-                echo "<td>
-                        <a href='edit.php?id=$user_data[id]' class='action-link edit'>Edit</a> | 
-                        <a href='delete.php?id=$user_data[id]' class='action-link delete' onclick='return confirm(\"Apakah Anda yakin ingin menghapus data ini?\")'>Delete</a>
-                      </td>";
-                echo "</tr>";        
+            if (mysqli_num_rows($result) > 0) {
+                while($user_data = mysqli_fetch_array($result)) {         
+                    echo "<tr>";
+                    echo "<td>".$user_data['nama_alat']."</td>";
+                    echo "<td>".$user_data['tahun']."</td>";
+                    echo "<td>".$user_data['merek']."</td>";    
+                    echo "<td>".$user_data['lokasi']."</td>";    
+                    echo "<td>
+                            <a href='edit.php?id=$user_data[id]' class='action-link edit'>Edit</a> | 
+                            <a href='delete.php?id=$user_data[id]' class='action-link delete' onclick='return confirm(\"Apakah Anda yakin ingin menghapus data ini?\")'>Delete</a>
+                          </td>";
+                    echo "</tr>";        
+                }
+            } else {
+                echo "<tr><td colspan='5' style='text-align: center; color: #888; font-style: italic; padding: 20px;'>Data tidak ditemukan / tidak sesuai filter.</td></tr>";
             }
             ?>
         </tbody>
