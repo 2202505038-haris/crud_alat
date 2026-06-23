@@ -126,12 +126,47 @@ $result = mysqli_query($mysqli, "SELECT * FROM alat ORDER BY id DESC");
         .delete:hover {
             background-color: rgba(244, 67, 54, 0.2);
         }
+
+        /* Kontainer Profil */
+        .profile-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            display: inline-flex;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .profile-img {
+            width: 80px; /* Ukuran lebar foto */
+            height: 80px; /* Ukuran tinggi foto */
+            border-radius: 50%; /* Membuat foto jadi lingkaran perfect */
+            object-fit: cover; /* Mencegah foto gepeng */
+            margin-right: 20px;
+            border: 3px solid #008080; /* Bingkai warna hijau toska sesuai tema */
+        }
+
+        .profile-text h2 {
+            margin: 0;
+        }
+        
+        .profile-text p {
+            margin: 5px 0 0 0;
+        }
     </style>
 </head>
 <body>
 
-    <h2>Data Alat Elektromedis</h2>
-    <p>Oleh: Haris Gunawan (2202505038)</p>
+    <div class="profile-container">
+        <img src="foto.jpeg" alt="Foto Haris Gunawan" class="profile-img">
+        <div class="profile-text">
+            <h2>Data Alat Elektromedis</h2>
+            <p>Oleh: Haris Gunawan (2202505038)</p>
+        </div>
+    </div>
+    <br><br>
     
     <a href="add.php" class="btn btn-tambah">Tambah Alat Baru</a>
     <a href="print.php" target="_blank" class="btn btn-cetak">Cetak PDF</a>
