@@ -18,6 +18,7 @@ $result = mysqli_query($mysqli, "SELECT * FROM alat ORDER BY id DESC");
 </head>
 <body>
     <b>Data Alat Elektromedis</b><br><br>
+    <p>Haris Gunawan (2202505038)</p>
     <a href="add.php">Tambah Alat Baru</a><br><br>
 
     <table>
